@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="inputjson" format="json">
+      <types:shape format="weave" example="sampleinput.json"><![CDATA[%dw 2.0
+
+type inputjson = {| CountryISOCode: String |} {"example": "{\\\"CountryISOCode\\\":\\\"IND\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#fe1fd180-8279-47f9-917f-b0406d10e21c">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="inputjson"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

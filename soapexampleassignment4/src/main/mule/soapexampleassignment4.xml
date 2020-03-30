@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="677ec801-8a2f-4464-897f-cdbf5b468b69" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="a71d5601-f4b6-4bd9-a0a0-6bb7cd73037e" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="e17b8ae8-a329-4bc0-96c9-3dd11e6a8948" >
+		<wsc:connection wsdlLocation="CountryInfoService.wsdl" service="CountryInfoService" port="CountryInfoServiceSoap" address="http://webservices.oorsprong.org/websamples.countryinfo/CountryInfoService.wso" />
+	</wsc:config>
+	<http:listener-config name="HTTP_Listener_config2" doc:name="HTTP Listener config" doc:id="5642066a-f73c-44ae-b623-db9284a27808" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="2f2baf6b-48ad-4863-8209-d2c7c204b9cd" >
+		<http:request-connection host="shubhamcustomeraccounts.us-e2.cloudhub.io" />
+	</http:request-config>
+	<http:listener-config name="HTTP_Listener_config4" doc:name="HTTP Listener config" doc:id="d2d5093a-6942-4420-a7c9-5c38f4500ec2" >
+		<http:listener-connection host="0.0.0.0" port="8083" />
+	</http:listener-config>
+	<flow name="SoapExample" doc:id="5d443ce9-ab9a-4fee-8fcc-cfa217aa32a1" >
+		<http:listener doc:name="Listener" doc:id="30b02ace-a6b3-4a21-864a-8801aba67fad" path="/test" config-ref="HTTP_Listener_config"/>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="6a605081-8b34-44db-87da-697cc01c923e" />
+		<http:request method="POST" doc:name="Request" doc:id="ddeb82b3-9c8a-4d8c-8f7c-4ba5452a7daf" config-ref="HTTP_Request_configuration" path="/test2"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e3381951-38c6-4685-b9bf-9ed233e8c488" type="ANY"/>
+		</error-handler>
+	</flow>
+	<flow name="soapexample2" doc:id="50eebf63-f20d-47ae-96f2-b110ac6f6b5e" >
+		<http:listener doc:name="Listener" doc:id="f3e0471a-ce5f-4264-a817-27ecf341d3f4" config-ref="HTTP_Listener_config" path="/test2"/>
+		<ee:transform doc:name="Transform Message" doc:id="fe1fd180-8279-47f9-917f-b0406d10e21c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://www.oorsprong.org/websamples.countryinfo
+---
+{
+	ns0#CapitalCity: {
+		ns0#sCountryISOCode: payload.CountryISOCode
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume operation="CapitalCity" doc:name="Consume" doc:id="89011234-f5c5-4686-88e2-7a6e990c973b" config-ref="Web_Service_Consumer_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="87517736-2768-4009-b15a-5c0664b0192b" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="04813012-6b10-4798-a625-666a2fbf6b65" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+payload.body]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="662fd6c5-7d5b-47da-8e13-871c140247d7" type="ANY">
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="CallmuleservicefromRest" doc:id="6709b6e0-da1e-4568-9dc1-fae7ba890a12" >
+		<http:listener doc:name="Listener" doc:id="133fe209-dd69-4d18-9a6c-d81bf893d169" config-ref="HTTP_Listener_config" path="/customerscheck"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7d3c1883-dbfc-44b7-8177-23d24b00791c" message="Calling the cutomer API deployed on exchange"/>
+		<http:request method="GET" doc:name="Request" doc:id="3f0344fd-878e-4dca-9823-5d74c0bfaccd" config-ref="HTTP_Request_configuration1" path="/customers"/>
+	</flow>
+	<flow name="soapexampleassignment4Flow" doc:id="11c79d55-6c78-423a-be0a-0478454c80cd" >
+		<http:listener doc:name="Listener" doc:id="5c02cd1f-29cf-4bbc-a5d6-239cb941828d" config-ref="HTTP_Listener_config" path="/maskingRequest"/>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="92072334-042f-4840-9e0b-5fbc42f193cb" />
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="131cda84-07d6-445c-89ba-cc197558eae7" variableName="oldpayload"/>
+		<ee:transform doc:name="Transform Message" doc:id="2d6ef51a-6812-4f3a-a341-bc2859ad135f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+import * from dw::util::Values
+---
+[payload] mask "ssn" with "*****" mask "accno" with "*****"
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5d9dd1d0-df89-4f04-bf75-3c878edffa97" message='#[payload]' />
+		<choice doc:name="Choice" doc:id="fd95c10f-3451-4683-917b-f085c69d5034" >
+			<when expression="#[sizeOf(vars.oldpayload.accno)&gt;8]">
+				<raise-error doc:name="Raise error" doc:id="b2630e54-4417-40d2-9e14-5caf9631cdaa" type="DATA:ACCOUNTNOSIZEEXCEEDS" description="Incorrect Account no"/>
+			</when>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="57767312-688c-424b-9399-1458661f303a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.oldpayload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="cecbf2b8-2588-4e38-9366-a6bfe80d6024" type="DATA:ACCOUNTNOSIZEEXCEEDS">
+				<ee:transform doc:name="Transform Message" doc:id="da8ec910-4a0b-4dab-b6f8-ad393da72907" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	message : error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
