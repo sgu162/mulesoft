@@ -68,7 +68,11 @@ payload.body]]></ee:set-payload>
 		<http:request method="GET" doc:name="Request" doc:id="3f0344fd-878e-4dca-9823-5d74c0bfaccd" config-ref="HTTP_Request_configuration1" path="/customers"/>
 	</flow>
 	<flow name="soapexampleassignment4Flow" doc:id="11c79d55-6c78-423a-be0a-0478454c80cd" >
-		<http:listener doc:name="Listener" doc:id="5c02cd1f-29cf-4bbc-a5d6-239cb941828d" config-ref="HTTP_Listener_config" path="/maskingRequest"/>
+		<http:listener doc:name="Listener" doc:id="5c02cd1f-29cf-4bbc-a5d6-239cb941828d" config-ref="HTTP_Listener_config" path="/maskingRequest">
+			<http:error-response >
+				<http:body ><![CDATA[#[output application/json --- payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
 		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="92072334-042f-4840-9e0b-5fbc42f193cb" />
 		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="131cda84-07d6-445c-89ba-cc197558eae7" variableName="oldpayload"/>
 		<ee:transform doc:name="Transform Message" doc:id="2d6ef51a-6812-4f3a-a341-bc2859ad135f" >
@@ -84,7 +88,7 @@ import * from dw::util::Values
 		<logger level="INFO" doc:name="Logger" doc:id="5d9dd1d0-df89-4f04-bf75-3c878edffa97" message='#[payload]' />
 		<choice doc:name="Choice" doc:id="fd95c10f-3451-4683-917b-f085c69d5034" >
 			<when expression="#[sizeOf(vars.oldpayload.accno)&gt;8]">
-				<raise-error doc:name="Raise error" doc:id="b2630e54-4417-40d2-9e14-5caf9631cdaa" type="DATA:ACCOUNTNOSIZEEXCEEDS" description="Incorrect Account no"/>
+				<raise-error doc:name="Raise error" doc:id="b2630e54-4417-40d2-9e14-5caf9631cdaa" type="DATA:ACCOUNTNOSIZEEXCEEDS" description="AccountNoSizeExceeded"/>
 			</when>
 		</choice>
 		<ee:transform doc:name="Transform Message" doc:id="57767312-688c-424b-9399-1458661f303a" >
