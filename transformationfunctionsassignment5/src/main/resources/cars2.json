@@ -1,0 +1,16 @@
+{
+   "cars":[
+      {
+         "name":"Ford"
+      },
+      {
+         "models":"X5"
+      },
+      {
+         "color":"red"
+      },
+      {
+         "size":"SUV"
+      }
+   ]
+}
