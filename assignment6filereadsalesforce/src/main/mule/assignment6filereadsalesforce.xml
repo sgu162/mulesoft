@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="311ce188-e537-4eab-a683-0d29bdd9a324" >
+		<file:connection workingDir="C:\Users\sgu162\AnypointStudio\studio-workspace\assignment6filereadsalesforce\src\main\resources\input" />
+	</file:config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="6c1d042c-1694-4903-9479-6025fd25f067" >
+		<salesforce:cached-basic-connection username="shubham.gupta5@publicissapient.com" password="ShubGyan@1994" securityToken="ThtwnN1bqRBTtnPXLJKSnyuWU" />
+	</salesforce:sfdc-config>
+	<flow name="assignment6filereadsalesforceFlow" doc:id="b62f8be0-87a6-448e-8d42-89defc14ff52" >
+		<file:listener doc:name="Read Account CSV File" doc:id="79e3a2ac-9ffc-49ac-8a66-3d859601f1f1" config-ref="File_Config" autoDelete="true">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="CSV TO JAVA" doc:id="84b512c5-baf7-401a-b789-fa230ac4445e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="Batch_Job" doc:id="8b386777-8ede-41b5-a5c9-603c560f16dc" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="727b3d5b-3d42-482a-a8e0-5964986d1309" >
+					<ee:transform doc:name="Data for Salesforce Contact Data" doc:id="a2d8c6ad-d4b0-43ea-a82b-5484a24a1e92" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	FirstName: payload."First Name",
+	LastName: payload."Last Name",
+	Title: payload."Job Title",
+	Department:payload."Department",
+	Phone :payload."Office Number",
+	MobilePhone: payload."Mobile Phone",
+	MailingCity: payload."Address City",
+	MailingState: payload."State or Province",
+	MailingPostalCode: payload."ZIP or Postal Code",
+	MailingCountry: payload."Country or Region",
+	Fax: payload.Fax,
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="c9f8b634-f912-4a89-aa46-39ba53320f59" size="4">
+						<salesforce:create doc:name="Create" doc:id="b091f643-fd2c-4c30-a133-d09790fa65c3" config-ref="Salesforce_Config" type="Contact"/>
+						<ee:transform doc:name="Transform Message" doc:id="cbd0f92d-03e0-4f80-9378-513fa9e2f76f" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="7865c127-8f72-4e23-9297-47ebea9f2691" message="Data has been successfully pushed to Salesforce"/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+</mule>
